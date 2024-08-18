@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Average Calculator</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+        select, button {
+            display: block;
+            width: 100%;
+            margin: 10px 0;
+            padding: 10px;
+            font-size: 16px;
+        }
+        .results {
+            margin-top: 20px;
+        }
+        .results p {
+            font-size: 16px;
+            color: #555;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Average Calculator</h1>
+    <select id="numberType">
+        <option value="prime">Prime Number</option>
+        <option value="fibonacci">Fibonacci Number</option>
+        <option value="even">Even Number</option>
+        <option value="random">Random Number</option>
+    </select>
+    <button onclick="fetchAndCalculate()">Get Average</button>
+
+    <div class="results">
+        <h3>Results:</h3>
+        <p id="before"></p>
+        <p id="after"></p>
+        <p id="average"></p>
+    </div>
+</div>
+
+<script>
+    const WINDOW_SIZE = 10;
+    let numberStorage = [];
+
+    const API_URLS = {
+        'prime': 'http://20.244.56.144/test/primes',
+        'fibonacci': 'http://20.244.56.144/test/fibo',
+        'even': 'http://20.244.56.144/test/even',
+        'random': 'http://20.244.56.144/test/rand'
+    };
+
+    async function fetchNumber(numberType) {
+        const url = API_URLS[numberType];
+        try {
+            const response = await fetch(url, { timeout: 500 });
+            if (!response.ok) throw new Error('Network response was not ok');
+            const data = await response.json();
+            return data.number;
+        } catch (error) {
+            console.error('Fetch error:', error);
+            return null;
+        }
+    }
+
+    async function fetchAndCalculate() {
+        const numberType = document.getElementById('numberType').value;
+        const beforeNumbers = [...numberStorage];
+        const newNumber = await fetchNumber(numberType);
+
+        if (newNumber !== null && !numberStorage.includes(newNumber)) {
+            if (numberStorage.length >= WINDOW_SIZE) {
+                numberStorage.shift(); // Remove the oldest number
+            }
+            numberStorage.push(newNumber);
+        }
+
+        const afterNumbers = [...numberStorage];
+        let average = null;
+        if (numberStorage.length === WINDOW_SIZE) {
+            const sum = numberStorage.reduce((a, b) => a + b, 0);
+            average = sum / WINDOW_SIZE;
+        }
+
+        document.getElementById('before').innerText = `Before: ${beforeNumbers.join(', ')}`;
+        document.getElementById('after').innerText = `After: ${afterNumbers.join(', ')}`;
+        document.getElementById('average').innerText = `Average: ${average !== null ? average : 'Not enough numbers'}`;
+    }
+</script>
+
+</body>
+</html>
